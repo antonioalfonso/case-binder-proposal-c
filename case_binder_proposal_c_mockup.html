@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Binder UI - Proposal C: Grouped Sections — Collapsible</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header .scenario {
+            font-size: 14px;
+            opacity: 0.9;
+            font-style: italic;
+        }
+
+        .proposal-badge {
+            display: inline-block;
+            background: #2196F3;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .case-info {
+            padding: 20px 30px;
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .case-header {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .case-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .case-field label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .case-field value {
+            font-size: 14px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1976D2;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .btn-secondary:hover {
+            background: #f5f5f5;
+        }
+
+        .btn-danger {
+            background: white;
+            color: #d32f2f;
+            border: 1px solid #ddd;
+        }
+
+        .btn-danger:hover {
+            background: #ffebee;
+        }
+
+        .documents-section {
+            padding: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-header h2 {
+            font-size: 18px;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .bulk-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .bulk-controls a {
+            color: #2196F3;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .bulk-controls a:hover {
+            text-decoration: underline;
+        }
+
+        .beneficiary-section {
+            margin-bottom: 25px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .beneficiary-header {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: background 0.2s;
+            user-select: none;
+        }
+
+        .beneficiary-header:hover {
+            background: #e9ecef;
+        }
+
+        .beneficiary-header.collapsed {
+            border-bottom: none;
+        }
+
+        .toggle-icon {
+            font-size: 18px;
+            margin-right: 12px;
+            transition: transform 0.3s;
+            color: #666;
+        }
+
+        .beneficiary-header.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .beneficiary-info {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            margin-right: 12px;
+        }
+
+        .avatar.blue {
+            background: #2196F3;
+        }
+
+        .avatar.pink {
+            background: #E91E63;
+        }
+
+        .avatar.purple {
+            background: #9C27B0;
+        }
+
+        .avatar.green {
+            background: #4CAF50;
+        }
+
+        .beneficiary-name {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .beneficiary-name strong {
+            font-size: 15px;
+            color: #333;
+        }
+
+        .beneficiary-name span {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .doc-count {
+            font-size: 13px;
+            color: #666;
+            margin-left: auto;
+            margin-right: 15px;
+        }
+
+        .beneficiary-content {
+            max-height: 2000px;
+            overflow: hidden;
+            transition: max-height 0.4s ease-in-out, opacity 0.3s;
+            opacity: 1;
+        }
+
+        .beneficiary-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+
+        .document-list {
+            padding: 20px;
+            background: white;
+        }
+
+        .document-group {
+            margin-bottom: 20px;
+        }
+
+        .document-group-header {
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .document-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .document-item:hover {
+            background: #f5f5f5;
+        }
+
+        .document-icon {
+            width: 32px;
+            height: 32px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e3f2fd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .document-name {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .name-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .name-tag.h1b {
+            background: #bbdefb;
+            color: #0d47a1;
+        }
+
+        .name-tag.h4 {
+            background: #f8bbd0;
+            color: #880e4f;
+        }
+
+        .name-tag.ead {
+            background: #c5e1a5;
+            color: #33691e;
+        }
+
+        .universal-docs {
+            background: #fffde7;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #fbc02d;
+        }
+
+        .universal-docs h3 {
+            font-size: 14px;
+            color: #f57f17;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .tradeoffs {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            border-radius: 4px;
+        }
+
+        .tradeoffs h3 {
+            font-size: 16px;
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+
+        .tradeoffs ul {
+            margin-left: 20px;
+        }
+
+        .tradeoffs li {
+            font-size: 14px;
+            color: #1b5e20;
+            margin-bottom: 6px;
+        }
+
+        .preview-pane {
+            padding: 20px;
+            background: #fafafa;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+
+        @keyframes slideDown {
+            from {
+                max-height: 0;
+                opacity: 0;
+            }
+            to {
+                max-height: 2000px;
+                opacity: 1;
+            }
+        }
+
+        .feature-note {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px 20px;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+
+        .feature-note h4 {
+            color: #1565C0;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .feature-note p {
+            font-size: 13px;
+            color: #0d47a1;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="proposal-badge">Proposal C</span>
+            <h1>Case Binder UI — Document Organization Proposals</h1>
+            <p class="scenario">Scenario: H-1B (John Bean) + H-4/EAD (Mary Bean, spouse) + H-4 (Lily Bean, child) + H-4 (Tom Bean, child)</p>
+        </div>
+
+        <div class="case-info">
+            <div class="case-header">
+                <div class="case-field">
+                    <label>Case Name</label>
+                    <value>HCAP (Case1)</value>
+                </div>
+                <div class="case-field">
+                    <label>Case Id</label>
+                    <value>CAS-140889</value>
+                </div>
+                <div class="case-field">
+                    <label>Case Status</label>
+                    <value>Open</value>
+                </div>
+                <div class="case-field">
+                    <label>Total Documents</label>
+                    <value>34</value>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-secondary">🔄 Refresh</button>
+                <button class="btn btn-primary">✓ Complete Review</button>
+                <button class="btn btn-secondary">✏️ Edit</button>
+                <button class="btn btn-danger">✕ Close case</button>
+            </div>
+        </div>
+
+        <div class="documents-section">
+            <div class="section-header">
+                <h2>Case Binder Documents</h2>
+                <div class="bulk-controls">
+                    <a id="collapseAll">Collapse all</a>
+                    <span style="color: #ccc;">|</span>
+                    <a id="expandAll">Expand all</a>
+                </div>
+            </div>
+
+            <!-- Universal Documents -->
+            <div class="universal-docs">
+                <h3>📋 Universal Case Sheet</h3>
+                <div class="document-item">
+                    <div class="document-icon">📄</div>
+                    <div class="document-name">NH NIV_NIV_HCap Checklist</div>
+                </div>
+                <div class="document-item">
+                    <div class="document-icon">📄</div>
+                    <div class="document-name">HCAP Cover Sheet</div>
+                </div>
+            </div>
+
+            <!-- John Bean Section -->
+            <div class="beneficiary-section" data-beneficiary="john">
+                <div class="beneficiary-header">
+                    <span class="toggle-icon">▼</span>
+                    <div class="beneficiary-info">
+                        <div class="avatar blue">JB</div>
+                        <div class="beneficiary-name">
+                            <strong>John Bean</strong>
+                            <span>H-1B • Principal</span>
+                        </div>
+                    </div>
+                    <span class="doc-count">13 docs</span>
+                </div>
+                <div class="beneficiary-content">
+                    <div class="document-list">
+                        <div class="document-item">
+                            <div class="document-icon">📋</div>
+                            <div class="document-name">Form I-907 <span class="name-tag h1b">H-1B</span></div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">📋</div>
+                            <div class="document-name">Form I-129 <span class="name-tag h1b">H-1B</span></div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">📋</div>
+                            <div class="document-name">Recapture Addendum I-129H <span class="name-tag h1b">H-1B</span></div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">✓</div>
+                            <div class="document-name">Certified LCA <span class="name-tag h1b">H-1B</span></div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">📄</div>
+                            <div class="document-name">I-129 Universal Support Letter <span class="name-tag h1b">H-1B</span></div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">🛂</div>
+                            <div class="document-name">Current Passport <span class="name-tag h1b">H-1B</span></div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">📋</div>
+                            <div class="document-name">I-140 Approval Notice <span class="name-tag h1b">H-1B</span></div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">📄</div>
+                            <div class="document-name">Most recent I-94 <span class="name-tag h1b">H-1B</span></div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">📄</div>
+                            <div class="document-name">Most recent I-20 <span class="name-tag h1b">H-1B</span></div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">💰</div>
+                            <div class="document-name">Most recent Paystubs <span class="name-tag h1b">H-1B</span></div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">📋</div>
+                            <div class="document-name">Form I-539 <span class="name-tag h1b">H-1B</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mary Bean Section -->
+            <div class="beneficiary-section" data-beneficiary="mary">
+                <div class="beneficiary-header">
+                    <span class="toggle-icon">▼</span>
+                    <div class="beneficiary-info">
+                        <div class="avatar pink">MB</div>
+                        <div class="beneficiary-name">
+                            <strong>Mary Bean</strong>
+                            <span>H-4 + Spouse</span>
+                        </div>
+                    </div>
+                    <span class="doc-count">8 docs</span>
+                </div>
+                <div class="beneficiary-content">
+                    <div class="document-list">
+                        <div class="document-item">
+                            <div class="document-icon">📋</div>
+                            <div class="document-name">Form I-907</div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">📋</div>
+                            <div class="document-name">Form I-129</div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">📋</div>
+                            <div class="document-name">Recapture Addendum I-129H</div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">✓</div>
+                            <div class="document-name">Certified LCA</div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">📄</div>
+                            <div class="document-name">I-129 Universal Support Letter</div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">🛂</div>
+                            <div class="document-name">Current Passport</div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">📋</div>
+                            <div class="document-name">I-140 Approval Notice</div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">💰</div>
+                            <div class="document-name">Most recent Paystubs</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lily Bean Section -->
+            <div class="beneficiary-section" data-beneficiary="lily">
+                <div class="beneficiary-header">
+                    <span class="toggle-icon">▼</span>
+                    <div class="beneficiary-info">
+                        <div class="avatar purple">LB</div>
+                        <div class="beneficiary-name">
+                            <strong>Lily Bean</strong>
+                            <span>H-4 • Child</span>
+                        </div>
+                    </div>
+                    <span class="doc-count">6 docs</span>
+                </div>
+                <div class="beneficiary-content">
+                    <div class="document-list">
+                        <div class="document-item">
+                            <div class="document-icon">🛂</div>
+                            <div class="document-name">Current Passport</div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">📄</div>
+                            <div class="document-name">Most recent I-94</div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">📄</div>
+                            <div class="document-name">Most recent I-20</div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">🎓</div>
+                            <div class="document-name">Educational Documents</div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">📋</div>
+                            <div class="document-name">I-797 Approval Notice</div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">📄</div>
+                            <div class="document-name">Proof of Recapture</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tom Bean Section -->
+            <div class="beneficiary-section" data-beneficiary="tom">
+                <div class="beneficiary-header">
+                    <span class="toggle-icon">▼</span>
+                    <div class="beneficiary-info">
+                        <div class="avatar green">TB</div>
+                        <div class="beneficiary-name">
+                            <strong>Tom Bean</strong>
+                            <span>H-4 • Child</span>
+                        </div>
+                    </div>
+                    <span class="doc-count">5 docs</span>
+                </div>
+                <div class="beneficiary-content">
+                    <div class="document-list">
+                        <div class="document-item">
+                            <div class="document-icon">🛂</div>
+                            <div class="document-name">Current Passport</div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">📄</div>
+                            <div class="document-name">Most recent I-94</div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">📄</div>
+                            <div class="document-name">Most recent I-20</div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">🎓</div>
+                            <div class="document-name">Educational Documents</div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">📋</div>
+                            <div class="document-name">I-797 Approval Notice</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tradeoffs Section -->
+            <div class="tradeoffs">
+                <h3>✓ Proposal C — Tradeoffs:</h3>
+                <ul>
+                    <li>All benefits of Proposal B's grouped structure</li>
+                    <li>Enhanced control: Users can focus on specific beneficiaries by collapsing others</li>
+                    <li>Better performance for cases with many documents</li>
+                    <li>Reduced visual clutter while maintaining clear organization</li>
+                    <li>Bulk controls for quick navigation (expand/collapse all)</li>
+                    <li>Maintains clear visual hierarchy even in collapsed state</li>
+                </ul>
+            </div>
+
+            <div class="feature-note">
+                <h4>🎯 Key Interactive Features:</h4>
+                <p>
+                    • Click any beneficiary header to toggle expand/collapse<br>
+                    • Use "Collapse all" or "Expand all" for bulk operations<br>
+                    • Smooth animations provide clear visual feedback<br>
+                    • Document count visible even when section is collapsed<br>
+                    • Preserves all organizational benefits of grouped sections
+                </p>
+            </div>
+        </div>
+
+        <div class="preview-pane">
+            <p>Document preview pane would appear here when a document is selected</p>
+        </div>
+    </div>
+
+    <script>
+        // Toggle individual sections
+        document.querySelectorAll('.beneficiary-header').forEach(header => {
+            header.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+                const content = this.nextElementSibling;
+                content.classList.toggle('collapsed');
+            });
+        });
+
+        // Collapse all
+        document.getElementById('collapseAll').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.beneficiary-header').forEach(header => {
+                header.classList.add('collapsed');
+                header.nextElementSibling.classList.add('collapsed');
+            });
+        });
+
+        // Expand all
+        document.getElementById('expandAll').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.beneficiary-header').forEach(header => {
+                header.classList.remove('collapsed');
+                header.nextElementSibling.classList.remove('collapsed');
+            });
+        });
+
+        // Document item click handler
+        document.querySelectorAll('.document-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.document-item').forEach(i => {
+                    i.style.background = '';
+                });
+                this.style.background = '#e3f2fd';
+            });
+        });
+    </script>
+</body>
+</html>
