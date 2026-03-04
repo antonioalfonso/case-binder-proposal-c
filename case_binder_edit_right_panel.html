@@ -149,6 +149,30 @@
             color: #323130;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .panel-btn {
+            padding: 4px 8px;
+            background: white;
+            border: 1px solid #8a8886;
+            font-size: 11px;
+            cursor: pointer;
+            border-radius: 2px;
+            text-transform: none;
+            letter-spacing: 0;
+            font-weight: 400;
+        }
+
+        .panel-btn:hover {
+            background: #edebe9;
         }
 
         .document-tree {
@@ -209,7 +233,7 @@
         }
 
         .center-panel.edit-mode {
-            margin-right: 400px;
+            margin-right: 480px;
         }
 
         .document-viewer {
@@ -259,7 +283,7 @@
             right: 0;
             top: 0;
             bottom: 0;
-            width: 400px;
+            width: 480px;
             background: #fff;
             border-left: 1px solid #d1d1d1;
             box-shadow: -2px 0 8px rgba(0,0,0,0.1);
@@ -581,7 +605,13 @@
     <div class="main-container">
         <!-- Left Panel - Document Navigation -->
         <div class="left-panel">
-            <div class="panel-header">Case binder documents</div>
+            <div class="panel-header">
+                <span>Case binder documents</span>
+                <div class="panel-controls">
+                    <button class="panel-btn" id="expandAllBtn">Expand all</button>
+                    <button class="panel-btn" id="collapseAllBtn">Collapse all</button>
+                </div>
+            </div>
             <div class="document-tree">
                 <!-- Universal Documents -->
                 <div class="tree-section">
@@ -679,32 +709,30 @@
 
             <div class="edit-panel-content">
                 <div class="filter-section">
-                    <label class="filter-label">Filter • Document to Add</label>
+                    <label class="filter-label">Add Document</label>
                     <div class="filter-row">
-                        <select class="filter-dropdown" id="sectionFilter">
+                        <select class="filter-dropdown" id="sectionFilter" style="flex: 1.2;">
                             <option value="">Select section...</option>
                             <option value="universal">Universal Documents</option>
                             <option value="john">John Bean (H-1B)</option>
                             <option value="mary-spouse">Mary Bean (H-4 Spouse)</option>
                             <option value="mary-ead">Mary Bean (H-4 EAD)</option>
                         </select>
-                        <select class="filter-dropdown" id="docToAddSelect">
+                        <select class="filter-dropdown" id="docToAddSelect" style="flex: 2;">
                             <option value="">Select document to add</option>
                         </select>
-                        <button class="add-doc-button" id="addDocBtn">Add document</button>
+                        <button class="add-doc-button" id="addDocBtn" style="flex-shrink: 0;">Add</button>
                     </div>
                 </div>
 
+                <div class="panel-header" style="margin: 0 -20px; padding: 12px 20px;">
+                    <span>Case binder documents</span>
+                </div>
+
                 <!-- Universal Documents Group -->
-                <div class="beneficiary-group">
-                    <div class="beneficiary-group-header">
-                        <div class="beneficiary-info">
-                            <strong>Universal Documents</strong>
-                            <span>Shared across all beneficiaries</span>
-                        </div>
-                        <span class="doc-count-badge">3 docs</span>
-                    </div>
-                    <div class="doc-list-edit">
+                <div class="tree-section">
+                    <div class="tree-item" style="padding: 8px 20px; background: #f3f2f1; margin: 0 -20px; font-weight: 600;">Universal Documents</div>
+                    <div class="doc-list-edit" style="padding: 8px 20px;">
                         <div class="doc-item-edit">
                             <span>Universal Case Sheet</span>
                             <button class="doc-delete-btn" title="Remove">🗑️</button>
@@ -717,8 +745,8 @@
                             <span>HCAP Cover Sheet</span>
                             <button class="doc-delete-btn" title="Remove">🗑️</button>
                         </div>
-                        <div class="add-doc-section" data-beneficiary="universal">
-                            + Add to Universal Documents
+                        <div class="add-doc-section" data-beneficiary="universal" style="margin-top: 8px;">
+                            + Add document
                         </div>
                         <div class="doc-selector-dropdown" data-beneficiary="universal">
                             <div class="doc-selector-search">
@@ -733,17 +761,13 @@
                     </div>
                 </div>
 
-                <!-- John Bean Group -->
-                <div class="beneficiary-group">
-                    <div class="beneficiary-group-header">
-                        <div class="beneficiary-avatar blue">JB</div>
-                        <div class="beneficiary-info">
-                            <strong>John Bean</strong>
-                            <span>H-1B • Principal</span>
-                        </div>
-                        <span class="doc-count-badge">9 docs</span>
+                <!-- John Bean H-1B Group -->
+                <div class="tree-section">
+                    <div class="tree-item" style="padding: 8px 20px; background: #f3f2f1; margin: 0 -20px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                        <div class="beneficiary-avatar blue" style="width: 24px; height: 24px; font-size: 10px;">JB</div>
+                        <span>John Bean (H-1B)</span>
                     </div>
-                    <div class="doc-list-edit">
+                    <div class="doc-list-edit" style="padding: 8px 20px;">
                         <div class="doc-item-edit">
                             <span>Form I-907</span>
                             <button class="doc-delete-btn" title="Remove">🗑️</button>
@@ -780,8 +804,8 @@
                             <span>Proof of Recapture</span>
                             <button class="doc-delete-btn" title="Remove">🗑️</button>
                         </div>
-                        <div class="add-doc-section" data-beneficiary="john">
-                            + Add to John Bean
+                        <div class="add-doc-section" data-beneficiary="john" style="margin-top: 8px;">
+                            + Add document
                         </div>
                         <div class="doc-selector-dropdown" data-beneficiary="john">
                             <div class="doc-selector-search">
@@ -799,16 +823,12 @@
                 </div>
 
                 <!-- Mary Bean H-4 Spouse Group -->
-                <div class="beneficiary-group">
-                    <div class="beneficiary-group-header">
-                        <div class="beneficiary-avatar pink">MB</div>
-                        <div class="beneficiary-info">
-                            <strong>Mary Bean</strong>
-                            <span>H-4 • Spouse</span>
-                        </div>
-                        <span class="doc-count-badge">3 docs</span>
+                <div class="tree-section">
+                    <div class="tree-item" style="padding: 8px 20px; background: #f3f2f1; margin: 0 -20px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                        <div class="beneficiary-avatar pink" style="width: 24px; height: 24px; font-size: 10px;">MB</div>
+                        <span>Mary Bean (H-4 Spouse)</span>
                     </div>
-                    <div class="doc-list-edit">
+                    <div class="doc-list-edit" style="padding: 8px 20px;">
                         <div class="doc-item-edit">
                             <span>DS-2019</span>
                             <button class="doc-delete-btn" title="Remove">🗑️</button>
@@ -821,8 +841,8 @@
                             <span>Most recent Paystubs</span>
                             <button class="doc-delete-btn" title="Remove">🗑️</button>
                         </div>
-                        <div class="add-doc-section" data-beneficiary="mary-spouse">
-                            + Add to Mary Bean (H-4 Spouse)
+                        <div class="add-doc-section" data-beneficiary="mary-spouse" style="margin-top: 8px;">
+                            + Add document
                         </div>
                         <div class="doc-selector-dropdown" data-beneficiary="mary-spouse">
                             <div class="doc-selector-search">
@@ -838,16 +858,12 @@
                 </div>
 
                 <!-- Mary Bean H-4 EAD Group -->
-                <div class="beneficiary-group">
-                    <div class="beneficiary-group-header">
-                        <div class="beneficiary-avatar purple">MB</div>
-                        <div class="beneficiary-info">
-                            <strong>Mary Bean</strong>
-                            <span>H-4 • EAD</span>
-                        </div>
-                        <span class="doc-count-badge">4 docs</span>
+                <div class="tree-section">
+                    <div class="tree-item" style="padding: 8px 20px; background: #f3f2f1; margin: 0 -20px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                        <div class="beneficiary-avatar purple" style="width: 24px; height: 24px; font-size: 10px;">MB</div>
+                        <span>Mary Bean (H-4 EAD)</span>
                     </div>
-                    <div class="doc-list-edit">
+                    <div class="doc-list-edit" style="padding: 8px 20px;">
                         <div class="doc-item-edit">
                             <span>Form I-765</span>
                             <button class="doc-delete-btn" title="Remove">🗑️</button>
@@ -864,8 +880,8 @@
                             <span>Two passport-style photos</span>
                             <button class="doc-delete-btn" title="Remove">🗑️</button>
                         </div>
-                        <div class="add-doc-section" data-beneficiary="mary-ead">
-                            + Add to Mary Bean (H-4 EAD)
+                        <div class="add-doc-section" data-beneficiary="mary-ead" style="margin-top: 8px;">
+                            + Add document
                         </div>
                         <div class="doc-selector-dropdown" data-beneficiary="mary-ead">
                             <div class="doc-selector-search">
@@ -933,6 +949,26 @@
             ]
         };
 
+        // Expand all button
+        document.getElementById('expandAllBtn').addEventListener('click', function() {
+            document.querySelectorAll('.tree-item.has-children').forEach(item => {
+                item.classList.remove('collapsed');
+                const section = item.dataset.section;
+                const children = document.querySelector(`[data-parent="${section}"]`);
+                if (children) children.style.display = 'block';
+            });
+        });
+
+        // Collapse all button
+        document.getElementById('collapseAllBtn').addEventListener('click', function() {
+            document.querySelectorAll('.tree-item.has-children').forEach(item => {
+                item.classList.add('collapsed');
+                const section = item.dataset.section;
+                const children = document.querySelector(`[data-parent="${section}"]`);
+                if (children) children.style.display = 'none';
+            });
+        });
+
         // Section filter change - populate document dropdown
         sectionFilter.addEventListener('change', function() {
             const selectedSection = this.value;
@@ -962,12 +998,17 @@
                 return;
             }
             
-            // Find the target beneficiary group
-            const targetGroup = document.querySelector(`.beneficiary-group [data-beneficiary="${selectedSection}"]`);
-            if (!targetGroup) return;
+            // Find the target section in the right panel
+            const allAddSections = document.querySelectorAll('.add-doc-section');
+            let targetAddSection = null;
+            allAddSections.forEach(section => {
+                if (section.dataset.beneficiary === selectedSection) {
+                    targetAddSection = section;
+                }
+            });
             
-            const docList = targetGroup.closest('.doc-list-edit');
-            const addSection = docList.querySelector('.add-doc-section');
+            if (!targetAddSection) return;
+            const docList = targetAddSection.closest('.doc-list-edit');
             
             // Create new document item
             const newDoc = document.createElement('div');
@@ -987,7 +1028,7 @@
             });
             
             // Insert before add button
-            addSection.parentNode.insertBefore(newDoc, addSection);
+            targetAddSection.parentNode.insertBefore(newDoc, targetAddSection);
             
             // Flash green
             newDoc.style.background = '#dff6dd';
@@ -1062,7 +1103,7 @@
                 const selector = this.closest('.doc-selector-dropdown');
                 const beneficiary = selector.dataset.beneficiary;
                 const docName = this.textContent;
-                const docList = selector.previousElementSibling.previousElementSibling;
+                const addSection = selector.previousElementSibling;
                 
                 // Create new document item
                 const newDoc = document.createElement('div');
@@ -1082,7 +1123,7 @@
                 });
                 
                 // Insert before add button
-                docList.appendChild(newDoc);
+                addSection.parentNode.insertBefore(newDoc, addSection);
                 
                 // Close selector
                 selector.classList.remove('active');
@@ -1119,13 +1160,7 @@
 
         // Update document counts
         function updateCounts() {
-            document.querySelectorAll('.beneficiary-group').forEach(group => {
-                const count = group.querySelectorAll('.doc-item-edit').length;
-                const badge = group.querySelector('.doc-count-badge');
-                if (badge) badge.textContent = `${count} docs`;
-            });
-            
-            // Update total
+            // Update total count in header
             const total = document.querySelectorAll('.doc-item-edit').length;
             document.getElementById('totalDocs').textContent = total;
         }
