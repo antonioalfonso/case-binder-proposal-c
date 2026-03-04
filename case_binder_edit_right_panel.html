@@ -448,11 +448,22 @@
             justify-content: space-between;
             font-size: 12px;
             color: #323130;
+            cursor: move;
+            user-select: none;
         }
 
         .doc-item-edit:hover {
             background: #f9f9f9;
             border-color: #d1d1d1;
+        }
+
+        .doc-item-edit.dragging {
+            opacity: 0.5;
+            background: #deecf9;
+        }
+
+        .doc-item-edit.drag-over {
+            border-top: 3px solid #0078d4;
         }
 
         .doc-delete-btn {
@@ -464,6 +475,7 @@
             font-size: 14px;
             opacity: 0;
             transition: opacity 0.2s;
+            flex-shrink: 0;
         }
 
         .doc-item-edit:hover .doc-delete-btn {
@@ -540,6 +552,18 @@
             display: flex;
             gap: 8px;
             justify-content: flex-end;
+        }
+
+        .doc-item-text {
+            flex: 1;
+            cursor: move;
+        }
+
+        .drag-handle {
+            color: #8a8886;
+            margin-right: 8px;
+            cursor: move;
+            font-size: 12px;
         }
 
         .empty-state {
@@ -915,6 +939,14 @@
         const docToAddSelect = document.getElementById('docToAddSelect');
         const addDocBtn = document.getElementById('addDocBtn');
 
+        // Track original state for cancel functionality
+        let originalState = null;
+        let currentChanges = {
+            added: [],
+            removed: [],
+            reordered: {}
+        };
+
         // Document library organized by section
         const documentLibrary = {
             'universal': [
@@ -984,6 +1016,81 @@
             }
         });
 
+        // Helper function to create document element with drag-and-drop
+        function createDocElement(docName, beneficiaryId) {
+            const newDoc = document.createElement('div');
+            newDoc.className = 'doc-item-edit';
+            newDoc.draggable = true;
+            newDoc.innerHTML = `
+                <span class="drag-handle">☰</span>
+                <span class="doc-item-text">${docName}</span>
+                <button class="doc-delete-btn" title="Remove">🗑️</button>
+            `;
+            
+            // Add delete handler
+            newDoc.querySelector('.doc-delete-btn').addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (confirm('Remove this document from the binder?')) {
+                    newDoc.remove();
+                    updateCounts();
+                }
+            });
+            
+            // Add drag-and-drop handlers
+            addDragHandlers(newDoc);
+            
+            return newDoc;
+        }
+
+        // Add drag-and-drop event handlers
+        function addDragHandlers(element) {
+            element.addEventListener('dragstart', function(e) {
+                this.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', this.innerHTML);
+            });
+            
+            element.addEventListener('dragend', function(e) {
+                this.classList.remove('dragging');
+                document.querySelectorAll('.doc-item-edit').forEach(item => {
+                    item.classList.remove('drag-over');
+                });
+            });
+            
+            element.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                
+                const dragging = document.querySelector('.dragging');
+                if (dragging && dragging !== this) {
+                    this.classList.add('drag-over');
+                }
+            });
+            
+            element.addEventListener('dragleave', function(e) {
+                this.classList.remove('drag-over');
+            });
+            
+            element.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                this.classList.remove('drag-over');
+                const dragging = document.querySelector('.dragging');
+                
+                if (dragging && dragging !== this) {
+                    // Determine if we should insert before or after
+                    const rect = this.getBoundingClientRect();
+                    const midpoint = rect.top + rect.height / 2;
+                    
+                    if (e.clientY < midpoint) {
+                        this.parentNode.insertBefore(dragging, this);
+                    } else {
+                        this.parentNode.insertBefore(dragging, this.nextSibling);
+                    }
+                }
+            });
+        }
         // Top Add Document button functionality
         addDocBtn.addEventListener('click', function() {
             const selectedSection = sectionFilter.value;
@@ -1010,22 +1117,8 @@
             if (!targetAddSection) return;
             const docList = targetAddSection.closest('.doc-list-edit');
             
-            // Create new document item
-            const newDoc = document.createElement('div');
-            newDoc.className = 'doc-item-edit';
-            newDoc.innerHTML = `
-                <span>${selectedDoc}</span>
-                <button class="doc-delete-btn" title="Remove">🗑️</button>
-            `;
-            
-            // Add delete handler
-            newDoc.querySelector('.doc-delete-btn').addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (confirm('Remove this document from the binder?')) {
-                    newDoc.remove();
-                    updateCounts();
-                }
-            });
+            // Create new document item with drag-and-drop
+            const newDoc = createDocElement(selectedDoc, selectedSection);
             
             // Insert before add button
             targetAddSection.parentNode.insertBefore(newDoc, targetAddSection);
@@ -1040,11 +1133,40 @@
             updateCounts();
         });
 
-        // Open edit panel
+        // Open edit panel and capture original state
         editBtn.addEventListener('click', function() {
+            captureOriginalState();
             rightPanel.classList.add('open');
             centerPanel.classList.add('edit-mode');
         });
+
+        // Capture the current state of all documents
+        function captureOriginalState() {
+            originalState = {};
+            document.querySelectorAll('.tree-section').forEach(section => {
+                const sectionElement = section.querySelector('[data-section]');
+                if (sectionElement) {
+                    const sectionId = sectionElement.dataset.section;
+                    const children = section.querySelector(`[data-parent="${sectionId}"]`);
+                    if (children) {
+                        originalState[sectionId] = Array.from(children.querySelectorAll('.tree-item[data-doc]')).map(item => ({
+                            id: item.dataset.doc,
+                            text: item.textContent.trim()
+                        }));
+                    }
+                } else {
+                    // Universal section
+                    const universalDocs = section.querySelectorAll('.tree-item[data-doc]');
+                    if (universalDocs.length > 0) {
+                        originalState['universal'] = Array.from(universalDocs).map(item => ({
+                            id: item.dataset.doc,
+                            text: item.textContent.trim()
+                        }));
+                    }
+                }
+            });
+            currentChanges = { added: [], removed: [], reordered: {} };
+        }
 
         // Close edit panel
         function closePanelFunc() {
@@ -1053,13 +1175,89 @@
         }
 
         closePanel.addEventListener('click', closePanelFunc);
-        cancelBtn.addEventListener('click', closePanelFunc);
+        
+        // Cancel changes and restore original state
+        cancelBtn.addEventListener('click', function() {
+            if (confirm('Discard all changes?')) {
+                restoreOriginalState();
+                closePanelFunc();
+            }
+        });
 
-        // Save changes
+        // Restore the original state from backup
+        function restoreOriginalState() {
+            // Restore right panel to match left panel
+            document.querySelectorAll('.doc-list-edit').forEach(docList => {
+                const addSection = docList.querySelector('.add-doc-section');
+                const beneficiaryId = addSection.dataset.beneficiary;
+                
+                // Remove all current doc items
+                docList.querySelectorAll('.doc-item-edit').forEach(item => item.remove());
+                
+                // Restore from original state
+                if (originalState[beneficiaryId]) {
+                    originalState[beneficiaryId].forEach(doc => {
+                        const newDoc = createDocElement(doc.text, beneficiaryId);
+                        addSection.parentNode.insertBefore(newDoc, addSection);
+                    });
+                }
+            });
+            updateCounts();
+        }
+
+        // Save changes and update left panel
         saveBtn.addEventListener('click', function() {
-            alert('Changes saved successfully!');
+            applyChangesToLeftPanel();
             closePanelFunc();
         });
+
+        // Apply all changes to the left panel
+        function applyChangesToLeftPanel() {
+            // Go through each section in the right panel and sync to left
+            document.querySelectorAll('.doc-list-edit').forEach(docList => {
+                const addSection = docList.querySelector('.add-doc-section');
+                const beneficiaryId = addSection.dataset.beneficiary;
+                
+                // Get current order from right panel
+                const rightDocs = Array.from(docList.querySelectorAll('.doc-item-edit')).map(item => 
+                    item.querySelector('.doc-item-text').textContent.trim()
+                );
+                
+                // Find corresponding left panel section
+                let leftContainer;
+                if (beneficiaryId === 'universal') {
+                    // Universal section (no data-section attribute)
+                    const universalSection = Array.from(document.querySelectorAll('.document-tree .tree-section'))[0];
+                    leftContainer = universalSection;
+                } else {
+                    // Other sections with data-parent
+                    leftContainer = document.querySelector(`[data-parent="${beneficiaryId}"]`);
+                }
+                
+                if (!leftContainer) return;
+                
+                // Remove all existing document items
+                leftContainer.querySelectorAll('.tree-item[data-doc]').forEach(item => item.remove());
+                
+                // Add documents in the new order
+                rightDocs.forEach((docText, index) => {
+                    const docItem = document.createElement('div');
+                    docItem.className = 'tree-item';
+                    docItem.dataset.doc = `${beneficiaryId}-doc-${index}`;
+                    docItem.textContent = docText;
+                    
+                    // Add click handler
+                    docItem.addEventListener('click', function() {
+                        document.querySelectorAll('.tree-item').forEach(i => i.classList.remove('selected'));
+                        this.classList.add('selected');
+                    });
+                    
+                    leftContainer.appendChild(docItem);
+                });
+            });
+            
+            updateCounts();
+        }
 
         // Document selection in left panel
         document.querySelectorAll('.tree-item[data-doc]').forEach(item => {
@@ -1105,22 +1303,8 @@
                 const docName = this.textContent;
                 const addSection = selector.previousElementSibling;
                 
-                // Create new document item
-                const newDoc = document.createElement('div');
-                newDoc.className = 'doc-item-edit';
-                newDoc.innerHTML = `
-                    <span>${docName}</span>
-                    <button class="doc-delete-btn" title="Remove">🗑️</button>
-                `;
-                
-                // Add delete handler
-                newDoc.querySelector('.doc-delete-btn').addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    if (confirm('Remove this document from the binder?')) {
-                        newDoc.remove();
-                        updateCounts();
-                    }
-                });
+                // Create new document item with drag-and-drop
+                const newDoc = createDocElement(docName, beneficiary);
                 
                 // Insert before add button
                 addSection.parentNode.insertBefore(newDoc, addSection);
@@ -1136,7 +1320,7 @@
             });
         });
 
-        // Delete buttons
+        // Delete buttons - add handlers to existing buttons
         document.querySelectorAll('.doc-delete-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
@@ -1145,6 +1329,21 @@
                     updateCounts();
                 }
             });
+        });
+
+        // Add drag handlers to existing doc items
+        document.querySelectorAll('.doc-item-edit').forEach(item => {
+            item.draggable = true;
+            // Add drag handle if missing
+            if (!item.querySelector('.drag-handle')) {
+                const textSpan = item.querySelector('span');
+                textSpan.className = 'doc-item-text';
+                const dragHandle = document.createElement('span');
+                dragHandle.className = 'drag-handle';
+                dragHandle.textContent = '☰';
+                item.insertBefore(dragHandle, textSpan);
+            }
+            addDragHandlers(item);
         });
 
         // Search in selectors
