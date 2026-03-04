@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Binder Edit Mode Concepts - Proposal C</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #fafafa;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .mode-toggle {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            display: flex;
+            gap: 8px;
+        }
+
+        .mode-btn {
+            padding: 8px 16px;
+            border: 1px solid #2196F3;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            background: white;
+            color: #2196F3;
+            text-transform: uppercase;
+        }
+
+        .mode-btn.active {
+            background: #2196F3;
+            color: white;
+        }
+
+        .case-header {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 12px 20px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr) auto;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .case-field label {
+            font-size: 11px;
+            color: #888;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .case-field value {
+            font-size: 13px;
+            color: #333;
+            font-weight: 600;
+            display: block;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 12px;
+            cursor: pointer;
+            background: white;
+            color: #333;
+        }
+
+        .btn:hover {
+            background: #f5f5f5;
+        }
+
+        .btn-primary {
+            background: #2196F3;
+            color: white;
+            border-color: #2196F3;
+        }
+
+        .btn-primary:hover {
+            background: #1976D2;
+        }
+
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+
+        .btn-success:hover {
+            background: #388E3C;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .left-panel {
+            width: 350px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fafafa;
+        }
+
+        .panel-header h2 {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .bulk-controls {
+            display: flex;
+            gap: 8px;
+            font-size: 11px;
+        }
+
+        .bulk-controls a {
+            color: #2196F3;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .bulk-controls a:hover {
+            text-decoration: underline;
+        }
+
+        .documents-tree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 0;
+        }
+
+        /* Edit Mode Specific Styles */
+        .edit-mode .left-panel {
+            background: #f8f9fa;
+        }
+
+        .universal-section {
+            padding: 8px 16px;
+            margin-bottom: 8px;
+        }
+
+        .beneficiary-section {
+            margin-bottom: 8px;
+            background: white;
+            margin: 0 8px 8px 8px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .edit-mode .beneficiary-section {
+            border: 2px solid #e0e0e0;
+        }
+
+        .edit-mode .beneficiary-section:hover {
+            border-color: #2196F3;
+        }
+
+        .beneficiary-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s;
+        }
+
+        .beneficiary-header:hover {
+            background: #f5f5f5;
+        }
+
+        .toggle-icon {
+            font-size: 10px;
+            margin-right: 10px;
+            transition: transform 0.2s;
+            color: #999;
+        }
+
+        .beneficiary-header.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 11px;
+            margin-right: 10px;
+        }
+
+        .avatar.blue { background: #2196F3; }
+        .avatar.pink { background: #E91E63; }
+        .avatar.purple { background: #9C27B0; }
+        .avatar.green { background: #4CAF50; }
+
+        .beneficiary-name {
+            flex: 1;
+        }
+
+        .beneficiary-name strong {
+            font-size: 13px;
+            color: #333;
+            display: block;
+        }
+
+        .beneficiary-name span {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .doc-count {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .beneficiary-content {
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+
+        .beneficiary-content.collapsed {
+            max-height: 0;
+        }
+
+        .document-list {
+            padding: 0 16px 12px 48px;
+        }
+
+        .document-item {
+            padding: 6px 8px;
+            margin-bottom: 2px;
+            font-size: 12px;
+            color: #555;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: background 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .document-item:hover {
+            background: #f0f0f0;
+        }
+
+        .document-item.selected {
+            background: #e3f2fd;
+            color: #1976D2;
+        }
+
+        .document-name {
+            flex: 1;
+        }
+
+        /* Edit Mode - Delete Button */
+        .delete-btn {
+            opacity: 0;
+            transition: opacity 0.2s;
+            background: none;
+            border: none;
+            color: #d32f2f;
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 16px;
+            border-radius: 3px;
+        }
+
+        .edit-mode .document-item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .delete-btn:hover {
+            background: #ffebee;
+        }
+
+        /* Add Document Button */
+        .add-doc-btn {
+            margin: 8px 16px 8px 48px;
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border: 2px dashed #ccc;
+            border-radius: 4px;
+            color: #666;
+            font-size: 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            display: none;
+        }
+
+        .edit-mode .add-doc-btn {
+            display: block;
+        }
+
+        .add-doc-btn:hover {
+            background: #e3f2fd;
+            border-color: #2196F3;
+            color: #2196F3;
+        }
+
+        .add-doc-btn.active {
+            background: #e3f2fd;
+            border-color: #2196F3;
+            border-style: solid;
+        }
+
+        /* Document Selector Dropdown */
+        .doc-selector {
+            display: none;
+            margin: 0 16px 8px 48px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .doc-selector.active {
+            display: block;
+        }
+
+        .doc-selector-search {
+            position: sticky;
+            top: 0;
+            background: white;
+            padding: 8px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .doc-selector-search input {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .doc-selector-item {
+            padding: 8px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .doc-selector-item:hover {
+            background: #f5f5f5;
+        }
+
+        .doc-selector-item:last-child {
+            border-bottom: none;
+        }
+
+        .right-panel {
+            flex: 1;
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .document-preview {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .preview-content {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 40px;
+            text-align: center;
+        }
+
+        .preview-content.has-document {
+            text-align: left;
+        }
+
+        .doc-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .doc-subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .doc-placeholder {
+            background: #fafafa;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .doc-placeholder-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .doc-placeholder-text {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .edit-help {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 16px 20px;
+            border-radius: 4px;
+            max-width: 400px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 100;
+            display: none;
+        }
+
+        .edit-mode .edit-help {
+            display: block;
+        }
+
+        .edit-help h3 {
+            font-size: 13px;
+            color: #856404;
+            margin-bottom: 8px;
+        }
+
+        .edit-help ul {
+            margin-left: 18px;
+            font-size: 11px;
+            color: #856404;
+            line-height: 1.6;
+        }
+
+        .close-help {
+            float: right;
+            cursor: pointer;
+            color: #ffc107;
+            font-weight: bold;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .view-mode .edit-controls {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="mode-toggle">
+        <button class="mode-btn active" data-mode="view">View Mode</button>
+        <button class="mode-btn" data-mode="edit">Edit Mode</button>
+    </div>
+
+    <!-- Case Header -->
+    <div class="case-header">
+        <div class="case-field">
+            <label>Case Name</label>
+            <value>HCAP (Case1)</value>
+        </div>
+        <div class="case-field">
+            <label>Case Id</label>
+            <value>CAS-140889</value>
+        </div>
+        <div class="case-field">
+            <label>Case Status</label>
+            <value>Open</value>
+        </div>
+        <div class="case-field">
+            <label>Total Documents</label>
+            <value id="docCount">34</value>
+        </div>
+        <div class="action-buttons">
+            <button class="btn">🔄 Refresh</button>
+            <button class="btn btn-primary">✓ Complete Review</button>
+            <button class="btn" id="editToggle">✏️ Edit</button>
+            <button class="btn btn-success edit-controls" id="saveBinder" style="display:none;">💾 Save</button>
+            <button class="btn edit-controls" id="cancelEdit" style="display:none;">✕ Cancel</button>
+        </div>
+    </div>
+
+    <!-- Main Container with Two Panels -->
+    <div class="main-container view-mode" id="mainContainer">
+        <!-- Left Panel: Document Navigation -->
+        <div class="left-panel">
+            <div class="panel-header">
+                <h2>Case Binder Documents</h2>
+                <div class="bulk-controls">
+                    <a id="collapseAll">Collapse all</a>
+                    <span>|</span>
+                    <a id="expandAll">Expand all</a>
+                </div>
+            </div>
+
+            <div class="documents-tree">
+                <!-- Universal Documents -->
+                <div class="universal-section">
+                    <div class="document-item" data-doc="universal-sheet" data-beneficiary="universal">
+                        <span class="document-name">Universal Case Sheet</span>
+                        <button class="delete-btn" title="Remove document">🗑️</button>
+                    </div>
+                    <div class="document-item" data-doc="nh-checklist" data-beneficiary="universal">
+                        <span class="document-name">NH NIV_NIV_HCap Checklist</span>
+                        <button class="delete-btn" title="Remove document">🗑️</button>
+                    </div>
+                    <div class="document-item" data-doc="hcap-cover" data-beneficiary="universal">
+                        <span class="document-name">HCAP Cover Sheet</span>
+                        <button class="delete-btn" title="Remove document">🗑️</button>
+                    </div>
+                    <div class="add-doc-btn" data-beneficiary="universal">+ Add Universal Document</div>
+                    <div class="doc-selector" data-beneficiary="universal">
+                        <div class="doc-selector-search">
+                            <input type="text" placeholder="Search documents...">
+                        </div>
+                        <div class="doc-selector-item">Form I-765 (EAD Application)</div>
+                        <div class="doc-selector-item">Marriage Certificate</div>
+                        <div class="doc-selector-item">Birth Certificate</div>
+                        <div class="doc-selector-item">Cover Letter</div>
+                    </div>
+                </div>
+
+                <!-- John Bean -->
+                <div class="beneficiary-section" data-beneficiary="john">
+                    <div class="beneficiary-header">
+                        <span class="toggle-icon">▼</span>
+                        <div class="avatar blue">JB</div>
+                        <div class="beneficiary-name">
+                            <strong>John Bean</strong>
+                            <span>H-1B • Principal</span>
+                        </div>
+                        <span class="doc-count">11 docs</span>
+                    </div>
+                    <div class="beneficiary-content">
+                        <div class="document-list">
+                            <div class="document-item" data-beneficiary="john">
+                                <span class="document-name">Form I-907</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="john">
+                                <span class="document-name">Form I-129</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="john">
+                                <span class="document-name">Recapture Addendum I-129H</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="john">
+                                <span class="document-name">Certified LCA</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="john">
+                                <span class="document-name">I-129 Universal Support Letter</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="john">
+                                <span class="document-name">Current Passport</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="john">
+                                <span class="document-name">I-140 Approval Notice</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="john">
+                                <span class="document-name">Most recent I-94</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="john">
+                                <span class="document-name">Most recent I-20</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="john">
+                                <span class="document-name">Most recent Paystubs</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="john">
+                                <span class="document-name">Form I-539</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="add-doc-btn" data-beneficiary="john">+ Add Document for John Bean</div>
+                        <div class="doc-selector" data-beneficiary="john">
+                            <div class="doc-selector-search">
+                                <input type="text" placeholder="Search documents...">
+                            </div>
+                            <div class="doc-selector-item">Diploma</div>
+                            <div class="doc-selector-item">Employment Verification Letter</div>
+                            <div class="doc-selector-item">Previous H-1B Approval</div>
+                            <div class="doc-selector-item">W-2 Forms</div>
+                            <div class="doc-selector-item">Transcripts</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mary Bean -->
+                <div class="beneficiary-section" data-beneficiary="mary">
+                    <div class="beneficiary-header">
+                        <span class="toggle-icon">▼</span>
+                        <div class="avatar pink">MB</div>
+                        <div class="beneficiary-name">
+                            <strong>Mary Bean</strong>
+                            <span>H-4 • Spouse</span>
+                        </div>
+                        <span class="doc-count">8 docs</span>
+                    </div>
+                    <div class="beneficiary-content">
+                        <div class="document-list">
+                            <div class="document-item" data-beneficiary="mary">
+                                <span class="document-name">Form I-907</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="mary">
+                                <span class="document-name">Form I-129</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="mary">
+                                <span class="document-name">Recapture Addendum I-129H</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="mary">
+                                <span class="document-name">Certified LCA</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="mary">
+                                <span class="document-name">I-129 Universal Support Letter</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="mary" class="selected">
+                                <span class="document-name">Current Passport</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="mary">
+                                <span class="document-name">I-140 Approval Notice</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="mary">
+                                <span class="document-name">Most recent Paystubs</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="add-doc-btn" data-beneficiary="mary">+ Add Document for Mary Bean</div>
+                        <div class="doc-selector" data-beneficiary="mary">
+                            <div class="doc-selector-search">
+                                <input type="text" placeholder="Search documents...">
+                            </div>
+                            <div class="doc-selector-item">Marriage Certificate</div>
+                            <div class="doc-selector-item">Previous H-4 Approval</div>
+                            <div class="doc-selector-item">EAD Card</div>
+                            <div class="doc-selector-item">Social Security Card</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lily Bean -->
+                <div class="beneficiary-section" data-beneficiary="lily">
+                    <div class="beneficiary-header">
+                        <span class="toggle-icon">▼</span>
+                        <div class="avatar purple">LB</div>
+                        <div class="beneficiary-name">
+                            <strong>Lily Bean</strong>
+                            <span>H-4 • Child</span>
+                        </div>
+                        <span class="doc-count">6 docs</span>
+                    </div>
+                    <div class="beneficiary-content">
+                        <div class="document-list">
+                            <div class="document-item" data-beneficiary="lily">
+                                <span class="document-name">Current Passport</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="lily">
+                                <span class="document-name">Most recent I-94</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="lily">
+                                <span class="document-name">Most recent I-20</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="lily">
+                                <span class="document-name">Educational Documents</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="lily">
+                                <span class="document-name">I-797 Approval Notice</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="lily">
+                                <span class="document-name">Proof of Recapture</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="add-doc-btn" data-beneficiary="lily">+ Add Document for Lily Bean</div>
+                        <div class="doc-selector" data-beneficiary="lily">
+                            <div class="doc-selector-search">
+                                <input type="text" placeholder="Search documents...">
+                            </div>
+                            <div class="doc-selector-item">Birth Certificate</div>
+                            <div class="doc-selector-item">School Enrollment Letter</div>
+                            <div class="doc-selector-item">Vaccination Records</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tom Bean -->
+                <div class="beneficiary-section" data-beneficiary="tom">
+                    <div class="beneficiary-header">
+                        <span class="toggle-icon">▼</span>
+                        <div class="avatar green">TB</div>
+                        <div class="beneficiary-name">
+                            <strong>Tom Bean</strong>
+                            <span>H-4 • Child</span>
+                        </div>
+                        <span class="doc-count">5 docs</span>
+                    </div>
+                    <div class="beneficiary-content">
+                        <div class="document-list">
+                            <div class="document-item" data-beneficiary="tom">
+                                <span class="document-name">Current Passport</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="tom">
+                                <span class="document-name">Most recent I-94</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="tom">
+                                <span class="document-name">Most recent I-20</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="tom">
+                                <span class="document-name">Educational Documents</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                            <div class="document-item" data-beneficiary="tom">
+                                <span class="document-name">I-797 Approval Notice</span>
+                                <button class="delete-btn" title="Remove document">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="add-doc-btn" data-beneficiary="tom">+ Add Document for Tom Bean</div>
+                        <div class="doc-selector" data-beneficiary="tom">
+                            <div class="doc-selector-search">
+                                <input type="text" placeholder="Search documents...">
+                            </div>
+                            <div class="doc-selector-item">Birth Certificate</div>
+                            <div class="doc-selector-item">School Enrollment Letter</div>
+                            <div class="doc-selector-item">Vaccination Records</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Document Preview -->
+        <div class="right-panel">
+            <div class="document-preview">
+                <div class="preview-content has-document" id="previewContent">
+                    <div class="doc-title">Current Passport</div>
+                    <div class="doc-subtitle">Mary Bean</div>
+                    <div class="doc-placeholder">
+                        <div class="doc-placeholder-icon">📄</div>
+                        <div class="doc-placeholder-text">
+                            Document preview would appear here<br>
+                            (PDF viewer, image viewer, or document content)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Help Box -->
+    <div class="edit-help" id="editHelp">
+        <span class="close-help" onclick="document.getElementById('editHelp').style.display='none'">×</span>
+        <h3>📝 Edit Mode Features:</h3>
+        <ul>
+            <li><strong>Add Documents:</strong> Click "+ Add Document" within any beneficiary section</li>
+            <li><strong>Remove Documents:</strong> Hover over a document and click the trash icon</li>
+            <li><strong>Context-Aware:</strong> Documents are automatically assigned to the correct beneficiary</li>
+            <li><strong>Search:</strong> Use the search box in the document selector to find documents quickly</li>
+            <li><strong>Save Changes:</strong> Click "Save" in the header when done</li>
+        </ul>
+    </div>
+
+    <script>
+        const mainContainer = document.getElementById('mainContainer');
+        const editToggle = document.getElementById('editToggle');
+        const saveBinder = document.getElementById('saveBinder');
+        const cancelEdit = document.getElementById('cancelEdit');
+        const modeButtons = document.querySelectorAll('.mode-btn');
+
+        // Mode Toggle via Buttons
+        modeButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const mode = this.dataset.mode;
+                modeButtons.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                if (mode === 'edit') {
+                    mainContainer.classList.remove('view-mode');
+                    mainContainer.classList.add('edit-mode');
+                    editToggle.textContent = '👁️ View';
+                    saveBinder.style.display = 'inline-block';
+                    cancelEdit.style.display = 'inline-block';
+                } else {
+                    mainContainer.classList.remove('edit-mode');
+                    mainContainer.classList.add('view-mode');
+                    editToggle.textContent = '✏️ Edit';
+                    saveBinder.style.display = 'none';
+                    cancelEdit.style.display = 'none';
+                    // Close all selectors
+                    document.querySelectorAll('.doc-selector').forEach(s => s.classList.remove('active'));
+                    document.querySelectorAll('.add-doc-btn').forEach(b => b.classList.remove('active'));
+                }
+            });
+        });
+
+        // Edit toggle in header
+        editToggle.addEventListener('click', function() {
+            if (mainContainer.classList.contains('view-mode')) {
+                modeButtons[1].click();
+            } else {
+                modeButtons[0].click();
+            }
+        });
+
+        // Cancel edit
+        cancelEdit.addEventListener('click', function() {
+            modeButtons[0].click();
+        });
+
+        // Save changes
+        saveBinder.addEventListener('click', function() {
+            alert('Changes saved! (In production, this would save to the backend)');
+            modeButtons[0].click();
+        });
+
+        // Toggle individual sections
+        document.querySelectorAll('.beneficiary-header').forEach(header => {
+            header.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+                const content = this.nextElementSibling;
+                content.classList.toggle('collapsed');
+            });
+        });
+
+        // Collapse all
+        document.getElementById('collapseAll').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.beneficiary-header').forEach(header => {
+                header.classList.add('collapsed');
+                header.nextElementSibling.classList.add('collapsed');
+            });
+        });
+
+        // Expand all
+        document.getElementById('expandAll').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.beneficiary-header').forEach(header => {
+                header.classList.remove('collapsed');
+                header.nextElementSibling.classList.remove('collapsed');
+            });
+        });
+
+        // Add Document Button Click
+        document.querySelectorAll('.add-doc-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const beneficiary = this.dataset.beneficiary;
+                const selector = document.querySelector(`.doc-selector[data-beneficiary="${beneficiary}"]`);
+                
+                // Close all other selectors
+                document.querySelectorAll('.doc-selector').forEach(s => {
+                    if (s !== selector) {
+                        s.classList.remove('active');
+                    }
+                });
+                document.querySelectorAll('.add-doc-btn').forEach(b => {
+                    if (b !== this) {
+                        b.classList.remove('active');
+                    }
+                });
+                
+                // Toggle this selector
+                selector.classList.toggle('active');
+                this.classList.toggle('active');
+            });
+        });
+
+        // Document Selector Item Click
+        document.querySelectorAll('.doc-selector-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const selector = this.closest('.doc-selector');
+                const beneficiary = selector.dataset.beneficiary;
+                const docName = this.textContent;
+                
+                // Find the document list for this beneficiary
+                let docList;
+                if (beneficiary === 'universal') {
+                    docList = document.querySelector('.universal-section');
+                } else {
+                    docList = document.querySelector(`.beneficiary-section[data-beneficiary="${beneficiary}"] .document-list`);
+                }
+                
+                // Create new document item
+                const newDoc = document.createElement('div');
+                newDoc.className = 'document-item';
+                newDoc.dataset.beneficiary = beneficiary;
+                newDoc.innerHTML = `
+                    <span class="document-name">${docName}</span>
+                    <button class="delete-btn" title="Remove document">🗑️</button>
+                `;
+                
+                // Add click handler for selection
+                newDoc.addEventListener('click', documentClickHandler);
+                
+                // Add delete handler
+                newDoc.querySelector('.delete-btn').addEventListener('click', deleteHandler);
+                
+                // Insert before the add button
+                const addBtn = selector.previousElementSibling;
+                docList.insertBefore(newDoc, addBtn);
+                
+                // Close selector
+                selector.classList.remove('active');
+                addBtn.classList.remove('active');
+                
+                // Update count
+                updateDocCount(beneficiary);
+                
+                // Flash animation
+                newDoc.style.background = '#c8e6c9';
+                setTimeout(() => {
+                    newDoc.style.background = '';
+                }, 500);
+            });
+        });
+
+        // Delete button handler
+        function deleteHandler(e) {
+            e.stopPropagation();
+            if (confirm('Remove this document from the binder?')) {
+                const docItem = this.closest('.document-item');
+                const beneficiary = docItem.dataset.beneficiary;
+                docItem.style.opacity = '0';
+                setTimeout(() => {
+                    docItem.remove();
+                    updateDocCount(beneficiary);
+                }, 200);
+            }
+        }
+
+        // Attach delete handlers
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', deleteHandler);
+        });
+
+        // Update document count
+        function updateDocCount(beneficiary) {
+            let count;
+            if (beneficiary === 'universal') {
+                count = document.querySelectorAll(`.universal-section .document-item`).length;
+            } else {
+                count = document.querySelectorAll(`.beneficiary-section[data-beneficiary="${beneficiary}"] .document-item`).length;
+                const countSpan = document.querySelector(`.beneficiary-section[data-beneficiary="${beneficiary}"] .doc-count`);
+                countSpan.textContent = `${count} docs`;
+            }
+            
+            // Update total count
+            const total = document.querySelectorAll('.document-item').length;
+            document.getElementById('docCount').textContent = total;
+        }
+
+        // Document selection
+        const previewContent = document.getElementById('previewContent');
+        
+        function documentClickHandler(e) {
+            if (e.target.classList.contains('delete-btn')) return;
+            e.stopPropagation();
+            
+            // Remove previous selection
+            document.querySelectorAll('.document-item').forEach(i => {
+                i.classList.remove('selected');
+            });
+            
+            // Add selection to clicked item
+            this.classList.add('selected');
+            
+            // Update preview
+            const docName = this.querySelector('.document-name').textContent.trim();
+            const section = this.closest('.beneficiary-section');
+            const beneficiary = section ? section.querySelector('.beneficiary-name strong')?.textContent : 'Universal';
+            
+            previewContent.innerHTML = `
+                <div class="doc-title">${docName}</div>
+                <div class="doc-subtitle">${beneficiary}</div>
+                <div class="doc-placeholder">
+                    <div class="doc-placeholder-icon">📄</div>
+                    <div class="doc-placeholder-text">
+                        Document preview would appear here<br>
+                        (PDF viewer, image viewer, or document content)
+                    </div>
+                </div>
+            `;
+        }
+        
+        document.querySelectorAll('.document-item').forEach(item => {
+            item.addEventListener('click', documentClickHandler);
+        });
+
+        // Search functionality in selectors
+        document.querySelectorAll('.doc-selector-search input').forEach(input => {
+            input.addEventListener('input', function() {
+                const search = this.value.toLowerCase();
+                const items = this.closest('.doc-selector').querySelectorAll('.doc-selector-item');
+                items.forEach(item => {
+                    const text = item.textContent.toLowerCase();
+                    item.style.display = text.includes(search) ? 'block' : 'none';
+                });
+            });
+        });
+
+        // Close selectors when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.add-doc-btn') && !e.target.closest('.doc-selector')) {
+                document.querySelectorAll('.doc-selector').forEach(s => s.classList.remove('active'));
+                document.querySelectorAll('.add-doc-btn').forEach(b => b.classList.remove('active'));
+            }
+        });
+    </script>
+</body>
+</html>
