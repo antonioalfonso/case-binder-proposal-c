@@ -561,7 +561,7 @@
             </div>
             <div class="info-item">
                 <span class="info-label">Total Documents</span>
-                <span class="info-value" id="totalDocs">15</span>
+                <span class="info-value" id="totalDocs">19</span>
             </div>
             <div class="info-item">
                 <span class="info-label">Binder Status</span>
@@ -609,16 +609,30 @@
                     </div>
                 </div>
 
-                <!-- Mary Bean -->
+                <!-- Mary Bean H-4 Spouse -->
                 <div class="tree-section">
-                    <div class="tree-item has-children" data-section="mary">
+                    <div class="tree-item has-children" data-section="mary-spouse">
                         <span class="chevron">▼</span>
                         <span>Mary Bean (H-4 Spouse)</span>
                     </div>
-                    <div class="tree-children" data-parent="mary">
+                    <div class="tree-children" data-parent="mary-spouse">
                         <div class="tree-item" data-doc="mary-1">DS-2019</div>
                         <div class="tree-item" data-doc="mary-2">Educational Documents</div>
                         <div class="tree-item" data-doc="mary-3">Most recent Paystubs</div>
+                    </div>
+                </div>
+
+                <!-- Mary Bean H-4 EAD -->
+                <div class="tree-section">
+                    <div class="tree-item has-children" data-section="mary-ead">
+                        <span class="chevron">▼</span>
+                        <span>Mary Bean (H-4 EAD)</span>
+                    </div>
+                    <div class="tree-children" data-parent="mary-ead">
+                        <div class="tree-item" data-doc="mary-ead-1">Form I-765</div>
+                        <div class="tree-item" data-doc="mary-ead-2">Form I-765 Worksheet</div>
+                        <div class="tree-item" data-doc="mary-ead-3">EAD Cover Letter</div>
+                        <div class="tree-item" data-doc="mary-ead-4">Two passport-style photos</div>
                     </div>
                 </div>
             </div>
@@ -670,9 +684,9 @@
                         <select class="filter-dropdown">
                             <option>All Documents</option>
                             <option>Universal Documents</option>
-                            <option>H-1B Documents</option>
-                            <option>H-4 Documents</option>
-                            <option>EAD Documents</option>
+                            <option>John Bean (H-1B)</option>
+                            <option>Mary Bean (H-4 Spouse)</option>
+                            <option>Mary Bean (H-4 EAD)</option>
                         </select>
                         <select class="filter-dropdown" id="docToAddSelect">
                             <option>Select document to add</option>
@@ -789,7 +803,7 @@
                     </div>
                 </div>
 
-                <!-- Mary Bean Group -->
+                <!-- Mary Bean H-4 Spouse Group -->
                 <div class="beneficiary-group">
                     <div class="beneficiary-group-header">
                         <div class="beneficiary-avatar pink">MB</div>
@@ -812,17 +826,59 @@
                             <span>Most recent Paystubs</span>
                             <button class="doc-delete-btn" title="Remove">🗑️</button>
                         </div>
-                        <div class="add-doc-section" data-beneficiary="mary">
-                            + Add to Mary Bean
+                        <div class="add-doc-section" data-beneficiary="mary-spouse">
+                            + Add to Mary Bean (H-4 Spouse)
                         </div>
-                        <div class="doc-selector-dropdown" data-beneficiary="mary">
+                        <div class="doc-selector-dropdown" data-beneficiary="mary-spouse">
                             <div class="doc-selector-search">
                                 <input type="text" placeholder="Search documents...">
                             </div>
                             <div class="doc-selector-item">Marriage Certificate</div>
                             <div class="doc-selector-item">Previous H-4 Approval</div>
-                            <div class="doc-selector-item">EAD Card</div>
                             <div class="doc-selector-item">Current Passport</div>
+                            <div class="doc-selector-item">Birth Certificate</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mary Bean H-4 EAD Group -->
+                <div class="beneficiary-group">
+                    <div class="beneficiary-group-header">
+                        <div class="beneficiary-avatar purple">MB</div>
+                        <div class="beneficiary-info">
+                            <strong>Mary Bean</strong>
+                            <span>H-4 • EAD</span>
+                        </div>
+                        <span class="doc-count-badge">4 docs</span>
+                    </div>
+                    <div class="doc-list-edit">
+                        <div class="doc-item-edit">
+                            <span>Form I-765</span>
+                            <button class="doc-delete-btn" title="Remove">🗑️</button>
+                        </div>
+                        <div class="doc-item-edit">
+                            <span>Form I-765 Worksheet</span>
+                            <button class="doc-delete-btn" title="Remove">🗑️</button>
+                        </div>
+                        <div class="doc-item-edit">
+                            <span>EAD Cover Letter</span>
+                            <button class="doc-delete-btn" title="Remove">🗑️</button>
+                        </div>
+                        <div class="doc-item-edit">
+                            <span>Two passport-style photos</span>
+                            <button class="doc-delete-btn" title="Remove">🗑️</button>
+                        </div>
+                        <div class="add-doc-section" data-beneficiary="mary-ead">
+                            + Add to Mary Bean (H-4 EAD)
+                        </div>
+                        <div class="doc-selector-dropdown" data-beneficiary="mary-ead">
+                            <div class="doc-selector-search">
+                                <input type="text" placeholder="Search documents...">
+                            </div>
+                            <div class="doc-selector-item">Copy of H-1B Approval</div>
+                            <div class="doc-selector-item">Copy of H-4 Approval</div>
+                            <div class="doc-selector-item">Previous EAD Card</div>
+                            <div class="doc-selector-item">I-94 Travel History</div>
                         </div>
                     </div>
                 </div>
