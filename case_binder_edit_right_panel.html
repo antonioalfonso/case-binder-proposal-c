@@ -681,23 +681,15 @@
                 <div class="filter-section">
                     <label class="filter-label">Filter • Document to Add</label>
                     <div class="filter-row">
-                        <select class="filter-dropdown">
-                            <option>All Documents</option>
-                            <option>Universal Documents</option>
-                            <option>John Bean (H-1B)</option>
-                            <option>Mary Bean (H-4 Spouse)</option>
-                            <option>Mary Bean (H-4 EAD)</option>
+                        <select class="filter-dropdown" id="sectionFilter">
+                            <option value="">Select section...</option>
+                            <option value="universal">Universal Documents</option>
+                            <option value="john">John Bean (H-1B)</option>
+                            <option value="mary-spouse">Mary Bean (H-4 Spouse)</option>
+                            <option value="mary-ead">Mary Bean (H-4 EAD)</option>
                         </select>
                         <select class="filter-dropdown" id="docToAddSelect">
-                            <option>Select document to add</option>
-                            <option disabled>────────────────</option>
-                            <option>HCAP Case Binder</option>
-                            <option>OK Code: 03042026_172916</option>
-                            <option>G-1450</option>
-                            <option>G-1650</option>
-                            <option>G-28</option>
-                            <option>HCAP Case Binder</option>
-                            <option>HCAP Cover Sheet</option>
+                            <option value="">Select document to add</option>
                         </select>
                         <button class="add-doc-button" id="addDocBtn">Add document</button>
                     </div>
@@ -732,10 +724,11 @@
                             <div class="doc-selector-search">
                                 <input type="text" placeholder="Search documents...">
                             </div>
-                            <div class="doc-selector-item">Form I-765 (EAD Application)</div>
-                            <div class="doc-selector-item">Marriage Certificate</div>
-                            <div class="doc-selector-item">Birth Certificate</div>
+                            <div class="doc-selector-item">G-28 (Attorney Representation)</div>
+                            <div class="doc-selector-item">G-1450 (Credit Card Payment)</div>
                             <div class="doc-selector-item">Cover Letter</div>
+                            <div class="doc-selector-item">Filing Fee Check</div>
+                            <div class="doc-selector-item">Table of Contents</div>
                         </div>
                     </div>
                 </div>
@@ -794,11 +787,13 @@
                             <div class="doc-selector-search">
                                 <input type="text" placeholder="Search documents...">
                             </div>
-                            <div class="doc-selector-item">Diploma</div>
+                            <div class="doc-selector-item">Diploma/Degree Certificate</div>
                             <div class="doc-selector-item">Employment Verification Letter</div>
-                            <div class="doc-selector-item">Previous H-1B Approval</div>
-                            <div class="doc-selector-item">W-2 Forms</div>
-                            <div class="doc-selector-item">Transcripts</div>
+                            <div class="doc-selector-item">Previous H-1B Approval Notice</div>
+                            <div class="doc-selector-item">W-2 Forms (Last 3 Years)</div>
+                            <div class="doc-selector-item">Academic Transcripts</div>
+                            <div class="doc-selector-item">Resume/CV</div>
+                            <div class="doc-selector-item">Previous I-797 Approvals</div>
                         </div>
                     </div>
                 </div>
@@ -834,9 +829,10 @@
                                 <input type="text" placeholder="Search documents...">
                             </div>
                             <div class="doc-selector-item">Marriage Certificate</div>
-                            <div class="doc-selector-item">Previous H-4 Approval</div>
-                            <div class="doc-selector-item">Current Passport</div>
+                            <div class="doc-selector-item">Previous H-4 Approval Notice</div>
+                            <div class="doc-selector-item">Current Passport (biographic page)</div>
                             <div class="doc-selector-item">Birth Certificate</div>
+                            <div class="doc-selector-item">I-94 Arrival/Departure Record</div>
                         </div>
                     </div>
                 </div>
@@ -875,10 +871,11 @@
                             <div class="doc-selector-search">
                                 <input type="text" placeholder="Search documents...">
                             </div>
-                            <div class="doc-selector-item">Copy of H-1B Approval</div>
-                            <div class="doc-selector-item">Copy of H-4 Approval</div>
-                            <div class="doc-selector-item">Previous EAD Card</div>
+                            <div class="doc-selector-item">Copy of H-1B Approval (Principal)</div>
+                            <div class="doc-selector-item">Copy of H-4 Approval Notice</div>
+                            <div class="doc-selector-item">Previous EAD Card (if any)</div>
                             <div class="doc-selector-item">I-94 Travel History</div>
+                            <div class="doc-selector-item">Marriage Certificate (copy)</div>
                         </div>
                     </div>
                 </div>
@@ -898,6 +895,109 @@
         const saveBtn = document.getElementById('saveBtn');
         const rightPanel = document.getElementById('rightPanel');
         const centerPanel = document.getElementById('centerPanel');
+        const sectionFilter = document.getElementById('sectionFilter');
+        const docToAddSelect = document.getElementById('docToAddSelect');
+        const addDocBtn = document.getElementById('addDocBtn');
+
+        // Document library organized by section
+        const documentLibrary = {
+            'universal': [
+                'G-28 (Attorney Representation)',
+                'G-1450 (Credit Card Payment)',
+                'Cover Letter',
+                'Filing Fee Check',
+                'Table of Contents'
+            ],
+            'john': [
+                'Diploma/Degree Certificate',
+                'Employment Verification Letter',
+                'Previous H-1B Approval Notice',
+                'W-2 Forms (Last 3 Years)',
+                'Academic Transcripts',
+                'Resume/CV',
+                'Previous I-797 Approvals'
+            ],
+            'mary-spouse': [
+                'Marriage Certificate',
+                'Previous H-4 Approval Notice',
+                'Current Passport (biographic page)',
+                'Birth Certificate',
+                'I-94 Arrival/Departure Record'
+            ],
+            'mary-ead': [
+                'Copy of H-1B Approval (Principal)',
+                'Copy of H-4 Approval Notice',
+                'Previous EAD Card (if any)',
+                'I-94 Travel History',
+                'Marriage Certificate (copy)'
+            ]
+        };
+
+        // Section filter change - populate document dropdown
+        sectionFilter.addEventListener('change', function() {
+            const selectedSection = this.value;
+            docToAddSelect.innerHTML = '<option value="">Select document to add</option>';
+            
+            if (selectedSection && documentLibrary[selectedSection]) {
+                documentLibrary[selectedSection].forEach(doc => {
+                    const option = document.createElement('option');
+                    option.value = doc;
+                    option.textContent = doc;
+                    docToAddSelect.appendChild(option);
+                });
+            }
+        });
+
+        // Top Add Document button functionality
+        addDocBtn.addEventListener('click', function() {
+            const selectedSection = sectionFilter.value;
+            const selectedDoc = docToAddSelect.value;
+            
+            if (!selectedSection) {
+                alert('Please select a section first');
+                return;
+            }
+            if (!selectedDoc) {
+                alert('Please select a document to add');
+                return;
+            }
+            
+            // Find the target beneficiary group
+            const targetGroup = document.querySelector(`.beneficiary-group [data-beneficiary="${selectedSection}"]`);
+            if (!targetGroup) return;
+            
+            const docList = targetGroup.closest('.doc-list-edit');
+            const addSection = docList.querySelector('.add-doc-section');
+            
+            // Create new document item
+            const newDoc = document.createElement('div');
+            newDoc.className = 'doc-item-edit';
+            newDoc.innerHTML = `
+                <span>${selectedDoc}</span>
+                <button class="doc-delete-btn" title="Remove">🗑️</button>
+            `;
+            
+            // Add delete handler
+            newDoc.querySelector('.doc-delete-btn').addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (confirm('Remove this document from the binder?')) {
+                    newDoc.remove();
+                    updateCounts();
+                }
+            });
+            
+            // Insert before add button
+            addSection.parentNode.insertBefore(newDoc, addSection);
+            
+            // Flash green
+            newDoc.style.background = '#dff6dd';
+            setTimeout(() => { newDoc.style.background = ''; }, 500);
+            
+            // Reset dropdowns
+            docToAddSelect.value = '';
+            
+            updateCounts();
+        });
 
         // Open edit panel
         editBtn.addEventListener('click', function() {
